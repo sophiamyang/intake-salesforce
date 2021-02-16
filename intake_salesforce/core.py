@@ -139,8 +139,8 @@ class SalesforceCatalog(Catalog):
         df_table = tables(self._sf.sf)
         for _, r in df_table.iterrows():
             e = LocalCatalogEntry(
-                        name=r,
-                        description=r, 
+                        name=r['QualifiedApiName'],
+                        description=r['QualifiedApiName'], 
                         driver=SalesforceTableSource,
                         catalog=self,
                         args={
@@ -148,9 +148,7 @@ class SalesforceCatalog(Catalog):
                             'password': self.password,
                             'security_token': self.security_token,
                             'instance': self.instance,
-                            'table': r['QualifiedApiName'],
-                            'label': r['Label'],
-                            'custom_setting': r['IsCustomSetting']
+                            'table': r['QualifiedApiName']
                         }
                     )
             e._plugin = [SalesforceTableSource]
