@@ -24,15 +24,9 @@ list(catalog)
 ```
 
 ## Load a table
-To load a table, you can use `catalog.<table>.read()` or `intake.open_salesforce_table(username, password, security_token, instance, <table>).read()`.
+To load a table, you can use `intake.open_salesforce_table(username, password, security_token, instance, <table>).read()`.
 
 For example, to load the Account table, run: 
-
-```
-df = catalog.Account.read()  
-```
-
-OR
 
 ```
 ds = intake.open_salesforce_table(username, password, security_token, instance, 'Account')
