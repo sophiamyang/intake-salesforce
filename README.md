@@ -23,6 +23,13 @@ catalog = intake.open_salesforce_catalog(username, password, security_token, ins
 list(catalog)
 ```
 
+A lot of tables in Salesforce are empty, run the folloing to get a list of tables with content. 
+Note that this will take 1-2 min to run. 
+```
+table_with_content = list(intake.open_salesforce_catalog(username, password, token, instance, with_content=True))
+table_with_content
+```
+
 ## Load a table
 To load a table, you can use `catalog.<table>.read()` or `intake.open_salesforce_table(username, password, security_token, instance, <table>).read()`.
 
