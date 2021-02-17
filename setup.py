@@ -22,7 +22,7 @@ setup(
     },
     install_requires=[
         'simple_salesforce',
-        'intake',
+        'intake[dataframe]',
         'pandas'
     ],
     keywords='intake-salesforce',
