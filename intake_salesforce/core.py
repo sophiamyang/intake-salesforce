@@ -6,7 +6,7 @@ import pandas as pd
 from . import __version__
 
 
-def table_with_content(x):
+def table_with_content(sf, x):
     """
     Check if a table has content or can do the SELECT FIELDS FROM TABLE without other filters
     e.g., To query Vote object, we must filter on Id, ParentId, or Parent.Type. 
@@ -36,7 +36,7 @@ def tables(sf, with_content):
     if with_content == True: 
         # only show table with content
         # I basically check if there is content for each table, this takes 1-2 min to run, there must be a better way
-        df_table['content'] = df_table['QualifiedApiName'].apply(lambda x: table_with_content(x))
+        df_table['content'] = df_table['QualifiedApiName'].apply(lambda x: table_with_content(sf, x))
         df_table = df_table[df_table['content'] > 0]
         df_table = df_table[['QualifiedApiName', 'Label', 'IsCustomSetting']].reset_index(drop=True)
     
