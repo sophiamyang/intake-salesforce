@@ -6,7 +6,19 @@ import pandas as pd
 from . import __version__
 
 
-def tables(sf):
+def table_with_content(x):
+    """
+    Check if a table has content or can do the SELECT FIELDS FROM TABLE without other filters
+    e.g., To query Vote object, we must filter on Id, ParentId, or Parent.Type. 
+    We don't include queries that need filters here. 
+
+    """
+    try:
+        return (sf.query(f"SELECT FIELDS(STANDARD) FROM {x} LIMIT 1")['totalSize'])
+    except Exception:
+        pass
+
+def tables(sf, with_content):
     """
     available tables to query
 
@@ -19,7 +31,16 @@ def tables(sf):
     df_table = pd.DataFrame(sf.query_all(
         "SELECT QualifiedApiName, Label, IsCustomSetting FROM EntityDefinition WHERE IsQueryable = true ")['records']
         )
-    return df_table[['QualifiedApiName', 'Label', 'IsCustomSetting']]
+    df_table = df_table[['QualifiedApiName', 'Label', 'IsCustomSetting']]
+
+    if with_content == True: 
+        # only show table with content
+        # I basically check if there is content for each table, this takes 1-2 min to run, there must be a better way
+        df_table['content'] = df_table['QualifiedApiName'].apply(lambda x: table_with_content(x))
+        df_table = df_table[df_table['content'] > 0]
+        df_table = df_table[['QualifiedApiName', 'Label', 'IsCustomSetting']].reset_index(drop=True)
+    
+    return df_table
 
 def schema(sf, table):
     """
@@ -35,7 +56,9 @@ def schema(sf, table):
     # But, it doesn't work because not all fields in FieldDefinition are queryable
     # so let's get try to get one record from FIELDS(ALL) query (LIMIT is up to 200)
     df_schema = pd.DataFrame(sf.query(f"SELECT FIELDS(ALL) FROM {table} LIMIT 1")['records'])
-    return df_schema.drop('attributes', axis=1)
+    if 'attributes' in df_schema.columns:
+        df_schema = df_schema.drop('attributes', axis=1)
+    return df_schema
 
 def salesforce_get_data(sf, table):   
     """
@@ -56,12 +79,19 @@ def salesforce_get_data(sf, table):
     df_schema = schema(sf, table)
     all_fields = df_schema.columns.str.cat(sep=', ')
 
-    #get all data for all fields for given table 
-    #might change to bulk later and then implement to_dask
-    df = pd.DataFrame(sf.query_all(
-        f"SELECT {all_fields} FROM {table}")['records']
-        )
-    return df_schema, df.drop('attributes', axis=1)
+    if len(df_schema) != 0: 
+        # if there is content in the table 
+        #get all data for all fields for given table 
+        #might change to bulk later and then implement to_dask
+        df = pd.DataFrame(sf.query_all(
+            f"SELECT {all_fields} FROM {table}")['records']
+            )
+        if 'attributes' in df.columns:
+            df = df.drop('attributes', axis=1)
+    elif len(df_schema) == 0:
+        # if no content, return an empty pandas dataframe 
+        df = df_schema
+    return df_schema, df
 
 
 
@@ -90,8 +120,6 @@ class SalesforceAPI():
         return salesforce_get_data(self.sf, table)
     
 
-    
-    
 class SalesforceTableSource(DataSource):
     name = 'salesforce_table'
     container = 'dataframe'
@@ -127,16 +155,17 @@ class SalesforceTableSource(DataSource):
 class SalesforceCatalog(Catalog):
     name = 'salesforce_catalog'
     version = __version__
-    def __init__(self, username, password, security_token, instance, *kwargs, metadata=None):
+    def __init__(self, username, password, security_token, instance, with_content=False, *kwargs, metadata=None):
         self.username = username
         self.password = password
         self.security_token = security_token
         self.instance = instance
+        self.with_content = with_content
         self._sf = SalesforceAPI(self.username, self.password, self.security_token, self.instance)
         super().__init__(name='salesforce', metadata=metadata)
     
     def _load(self):
-        df_table = tables(self._sf.sf)
+        df_table = tables(self._sf.sf, self.with_content)
         for _, r in df_table.iterrows():
             e = LocalCatalogEntry(
                         name=r['QualifiedApiName'],
