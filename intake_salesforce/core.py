@@ -126,7 +126,7 @@ class SalesforceTableSource(DataSource):
     version = __version__
     partition_access = True
     
-    def __init__(self, username, password, security_token, instance, table, *kwargs, metadata=None):
+    def __init__(self, username, password, security_token, instance, table, metadata=None, **kwargs):
         self.table = table
         self._df = None
         self._df_schema = None       
@@ -155,7 +155,7 @@ class SalesforceTableSource(DataSource):
 class SalesforceCatalog(Catalog):
     name = 'salesforce_catalog'
     version = __version__
-    def __init__(self, username, password, security_token, instance, with_content=False, *kwargs, metadata=None):
+    def __init__(self, username, password, security_token, instance, with_content=False, metadata=None, **kwargs):
         self.username = username
         self.password = password
         self.security_token = security_token
