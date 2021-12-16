@@ -1,0 +1,20 @@
+name: Deploy Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy_pypi:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install -e .
+      - run: $CONDA/bin/python setup.py sdist bdist_wheel
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
