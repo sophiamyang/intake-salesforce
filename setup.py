@@ -13,7 +13,7 @@ setup(
     license="BSD",
     author="Sophia Yang",
     url='https://github.com/sophiamyang/intake-salesforce',
-    packages=find_packages(),
+    packages=['intake_salesforce'],
     entry_points={
         'intake.drivers': [
             'salesforce_catalog = intake_salesforce.core:SalesforceCatalog',
