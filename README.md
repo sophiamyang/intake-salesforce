@@ -4,6 +4,10 @@ Intake driver to load Salesforce data
 
 ## Install 
 ```
+conda install intake-salesforce -c conda-forge
+```
+or
+```
 pip install intake-salesforce
 ```
 
